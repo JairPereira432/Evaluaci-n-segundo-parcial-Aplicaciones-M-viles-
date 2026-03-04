@@ -33,15 +33,17 @@ class MainActivity : AppCompatActivity() {
         setupRecyclerView()
         observeViewModel()
 
+        // USA dialog_add_lab.xml
         binding.fabAddLab.setOnClickListener { showAddLabDialog() }
         binding.btnSincronizar.setOnClickListener { viewModel.syncData() }
     }
 
     private fun setupRecyclerView() {
         adapter = LabAdapter(emptyList()) { lab ->
-            val intent = Intent(this, EquipoActivity::class.java)
-            intent.putExtra("LAB_ID", lab.id)
-            intent.putExtra("LAB_NOMBRE", lab.nombre)
+            val intent = Intent(this, EquipoActivity::class.java).apply {
+                putExtra("LAB_ID", lab.id)
+                putExtra("LAB_NOMBRE", lab.nombre)
+            }
             startActivity(intent)
         }
         binding.rvLaboratorios.layoutManager = LinearLayoutManager(this)

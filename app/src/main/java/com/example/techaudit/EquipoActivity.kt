@@ -1,23 +1,18 @@
 package com.example.techaudit
 
+import android.content.Intent
 import android.os.Bundle
-import android.view.LayoutInflater
-import android.widget.ArrayAdapter
 import android.widget.Toast
 import androidx.activity.viewModels
-import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.techaudit.adapter.EquipoAdapter
 import com.example.techaudit.databinding.ActivityEquipoBinding
-import com.example.techaudit.databinding.DialogAddEditEquipoBinding
 import com.example.techaudit.model.Equipo
-import com.example.techaudit.model.EstadoEquipo
 import com.example.techaudit.viewmodel.EquipoViewModel
 import com.example.techaudit.viewmodel.EquipoViewModelFactory
-import java.util.UUID
 
 class EquipoActivity : AppCompatActivity() {
 
@@ -36,7 +31,7 @@ class EquipoActivity : AppCompatActivity() {
         currentLabId = intent.getStringExtra("LAB_ID")
         val labNombre = intent.getStringExtra("LAB_NOMBRE")
         
-        supportActionBar?.title = "Equipos: $labNombre"
+        supportActionBar?.title = labNombre
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
 
         currentLabId?.let { viewModel.setLabId(it) }
@@ -45,7 +40,13 @@ class EquipoActivity : AppCompatActivity() {
         setupSwipeToDelete()
         observeViewModel()
 
-        binding.fabAddEquipo.setOnClickListener { showAddEditDialog(null) }
+        binding.fabAddEquipo.setOnClickListener {
+            val intent = Intent(this, AddEditActivity::class.java).apply {
+                putExtra("TIPO_MODO", "EQUIPO")
+                putExtra("LAB_ID", currentLabId)
+            }
+            startActivity(intent)
+        }
     }
 
     override fun onSupportNavigateUp(): Boolean {
@@ -55,7 +56,13 @@ class EquipoActivity : AppCompatActivity() {
 
     private fun setupRecyclerView() {
         adapter = EquipoAdapter(emptyList()) { equipo ->
-            showAddEditDialog(equipo)
+            // AHORA AL TOCAR, ABRE DIRECTAMENTE AddEditActivity PARA EDITAR
+            val intent = Intent(this, AddEditActivity::class.java).apply {
+                putExtra("TIPO_MODO", "EQUIPO")
+                putExtra("EQUIPO_EDITAR", equipo)
+                putExtra("LAB_ID", currentLabId)
+            }
+            startActivity(intent)
         }
         binding.rvEquipos.layoutManager = LinearLayoutManager(this)
         binding.rvEquipos.adapter = adapter
@@ -78,41 +85,5 @@ class EquipoActivity : AppCompatActivity() {
             }
         }
         ItemTouchHelper(swipeHandler).attachToRecyclerView(binding.rvEquipos)
-    }
-
-    private fun showAddEditDialog(equipo: Equipo?) {
-        val dialogBinding = DialogAddEditEquipoBinding.inflate(LayoutInflater.from(this))
-        val isEdit = equipo != null
-
-        // Llenar Spinner
-        val estados = EstadoEquipo.values()
-        val spinnerAdapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, estados)
-        spinnerAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
-        dialogBinding.spEstado.adapter = spinnerAdapter
-
-        if (isEdit) {
-            dialogBinding.etNombreEquipo.setText(equipo?.nombre)
-            dialogBinding.spEstado.setSelection(estados.indexOf(equipo?.estado))
-        }
-
-        AlertDialog.Builder(this)
-            .setTitle(if (isEdit) "Editar Equipo" else "Nuevo Equipo")
-            .setView(dialogBinding.root)
-            .setPositiveButton("Guardar") { _, _ ->
-                val nombre = dialogBinding.etNombreEquipo.text.toString()
-                val estado = dialogBinding.spEstado.selectedItem as EstadoEquipo
-                
-                if (nombre.isNotBlank()) {
-                    if (isEdit) {
-                        viewModel.update(equipo!!.copy(nombre = nombre, estado = estado))
-                    } else {
-                        viewModel.insert(Equipo(UUID.randomUUID().toString(), nombre, estado, currentLabId!!))
-                    }
-                } else {
-                    Toast.makeText(this, "Nombre obligatorio", Toast.LENGTH_SHORT).show()
-                }
-            }
-            .setNegativeButton("Cancelar", null)
-            .show()
     }
 }

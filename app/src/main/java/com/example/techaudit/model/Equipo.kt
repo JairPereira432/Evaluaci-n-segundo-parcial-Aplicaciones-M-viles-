@@ -30,6 +30,9 @@ data class Equipo(
     @PrimaryKey
     val id: String,
     val nombre: String,
+    val ubicacion: String,      // Nuevo campo
+    val fechaRegistro: String,  // Nuevo campo
+    val notas: String,          // Nuevo campo
     val estado: EstadoEquipo = EstadoEquipo.PENDIENTE,
-    val laboratorioId: String // Relación con Laboratorio
+    val laboratorioId: String
 ) : Parcelable
